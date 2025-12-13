@@ -2,6 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
+  <!-- 固定手機頁面，不會自動放大 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Magic Grass</title>
   <style>
@@ -28,17 +29,21 @@
       width: 90%;
     }
 
+    h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+
+    p { font-size: 1rem; margin-bottom: 1rem; }
+
     /* 按鈕 */
     button {
       width: 100%;
-      padding: 1rem 2rem;
-      font-size: 1.2rem;
+      padding: 1rem;
+      font-size: 16px; /* >=16px 防止手機自動放大 */
       color: #fff;
       background: #2e7d32;
       border: none;
       border-radius: 999px; /* 圓角 */
       cursor: pointer;
-      transition: none; /* 移除 transform 動畫 */
+      transition: none; /* 移除 transform */
     }
 
     button:disabled {
@@ -86,7 +91,7 @@
     <button id="press-btn">按我集氣</button>
 
     <div class="grass-wrapper">
-      <video id="grass-video" src="grass.mp4" autoplay muted loop playsinline></video>
+      <video id="grass-video" src="grass.mp4" muted loop playsinline></video>
     </div>
   </div>
 
@@ -94,6 +99,12 @@
     const button = document.getElementById('press-btn');
     const progressBar = document.getElementById('progress-bar');
     const video = document.getElementById('grass-video');
+
+    // 手機影片自動播放
+    video.play().catch(() => {
+      // 如果無法自動播放，等使用者點擊
+      console.log("影片需用戶互動才能播放");
+    });
 
     let pressCount = 0;
     const requiredPresses = 10;
@@ -114,9 +125,11 @@
       // 更新進度條
       progressBar.style.width = (pressCount / requiredPresses * 100) + '%';
 
+      // 嘗試播放影片（保險）
+      video.play().catch(()=>{});
+
       if (pressCount >= requiredPresses) {
-        // 成功連續按十下 → 跳到動畫頁
-        window.location.href = 'animation.html';
+        window.location.href = 'animation.html'; // 連續按十下跳頁
       }
     });
   </script>
