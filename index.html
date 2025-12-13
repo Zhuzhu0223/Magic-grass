@@ -1,91 +1,124 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>連續集氣小草</title>
-<style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: url("bg.png") no-repeat center center / cover;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
-  .container {
-    background: rgba(255,255,255,0.7);
-    border-radius: 24px;
-    padding: 1.5rem;
-    text-align: center;
-    width: 90%;
-    max-width: 420px;
-  }
-  button {
-    width: 100%;
-    padding: 1rem 2rem;
-    font-size: 1.2rem;
-    border-radius: 999px;
-    border: none;
-    background: #2e7d32;
-    color: white;
-    cursor: pointer;
-    margin-top: 1rem;
-  }
-  .progress-container {
-    background: #c8e6c9;
-    border-radius: 999px;
-    width: 100%;
-    height: 20px;
-    margin-top: 15px;
-  }
-  .progress-bar {
-    height: 100%;
-    width: 0%;
-    background: #2e7d32;
-    border-radius: 999px;
-    transition: width 0.2s ease;
-  }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Magic Grass</title>
+  <style>
+    /* 全螢幕背景 */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: url('bg.png') no-repeat center center / cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* 集氣容器 */
+    .container {
+      text-align: center;
+      background: rgba(255,255,255,0.6);
+      border-radius: 24px;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    /* 按鈕 */
+    button {
+      width: 100%;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      color: #fff;
+      background: #2e7d32;
+      border: none;
+      border-radius: 999px; /* 圓角 */
+      cursor: pointer;
+      transition: none; /* 移除 transform 動畫 */
+    }
+
+    button:disabled {
+      background: #9e9e9e;
+      cursor: not-allowed;
+    }
+
+    /* 進度條 */
+    .progress {
+      height: 20px;
+      background: #c8e6c9;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 1rem 0;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: #2e7d32;
+      transition: width 0.2s linear;
+    }
+
+    /* 小草影片 */
+    .grass-wrapper {
+      margin-top: 1rem;
+    }
+
+    video {
+      width: 100%;
+      border-radius: 16px;
+      object-fit: contain;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
-    <h1>連續集氣 🌱</h1>
-    <button id="collectBtn">集氣</button>
-    <div class="progress-container">
-      <div class="progress-bar" id="progressBar"></div>
+    <h1>集氣小遊戲</h1>
+    <p>連續按十次才能進入下一頁</p>
+
+    <div class="progress">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+
+    <button id="press-btn">按我集氣</button>
+
+    <div class="grass-wrapper">
+      <video id="grass-video" src="grass.mp4" autoplay muted loop playsinline></video>
     </div>
   </div>
 
-<script>
-  const btn = document.getElementById('collectBtn');
-  const progressBar = document.getElementById('progressBar');
-  let count = 0;
-  const total = 10;
-  let timeoutId;
-  const maxInterval = 300; // 1秒內必須連按一次
+  <script>
+    const button = document.getElementById('press-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const video = document.getElementById('grass-video');
 
-  btn.addEventListener('click', () => {
-    // 每次按下按鈕，重置倒數計時
-    clearTimeout(timeoutId);
-    count++;
-    let percent = (count / total) * 100;
-    progressBar.style.width = percent + '%';
+    let pressCount = 0;
+    const requiredPresses = 10;
+    const maxInterval = 300; // 連續按的最大間隔 ms
+    let lastPressTime = 0;
 
-    if (count === total) {
-      // 集滿 10 次 → 跳到動畫頁
-      setTimeout(() => {
-        window.location.href = "animation.html";
-      }, 300);
-    } else {
-      // 如果超過 maxInterval 沒按，重置連續次數
-      timeoutId = setTimeout(() => {
-        count = 0;
-        progressBar.style.width = '0%';
-      }, maxInterval);
-    }
-  });
-</script>
+    button.addEventListener('click', () => {
+      const now = Date.now();
+
+      // 檢查是否連續
+      if (pressCount > 0 && now - lastPressTime > maxInterval) {
+        pressCount = 0; // 超過間隔重置
+      }
+
+      pressCount++;
+      lastPressTime = now;
+
+      // 更新進度條
+      progressBar.style.width = (pressCount / requiredPresses * 100) + '%';
+
+      if (pressCount >= requiredPresses) {
+        // 成功連續按十下 → 跳到動畫頁
+        window.location.href = 'animation.html';
+      }
+    });
+  </script>
 </body>
 </html>
