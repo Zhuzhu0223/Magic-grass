@@ -2,11 +2,9 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <!-- 固定手機頁面，不會自動放大 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Magic Grass</title>
+  <title>Magic Grass 集氣頁</title>
   <style>
-    /* 全螢幕背景 */
     body {
       margin: 0;
       padding: 0;
@@ -19,7 +17,6 @@
       overflow: hidden;
     }
 
-    /* 集氣容器 */
     .container {
       text-align: center;
       background: rgba(255,255,255,0.6);
@@ -30,10 +27,8 @@
     }
 
     h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-
     p { font-size: 1rem; margin-bottom: 1rem; }
 
-    /* 按鈕 */
     button {
       width: 100%;
       padding: 1rem;
@@ -41,9 +36,9 @@
       color: #fff;
       background: #2e7d32;
       border: none;
-      border-radius: 999px; /* 圓角 */
+      border-radius: 999px;
       cursor: pointer;
-      transition: none; /* 移除 transform */
+      transition: none;
     }
 
     button:disabled {
@@ -51,7 +46,6 @@
       cursor: not-allowed;
     }
 
-    /* 進度條 */
     .progress {
       height: 20px;
       background: #c8e6c9;
@@ -66,17 +60,6 @@
       background: #2e7d32;
       transition: width 0.2s linear;
     }
-
-    /* 小草影片 */
-    .grass-wrapper {
-      margin-top: 1rem;
-    }
-
-    video {
-      width: 100%;
-      border-radius: 16px;
-      object-fit: contain;
-    }
   </style>
 </head>
 <body>
@@ -89,22 +72,11 @@
     </div>
 
     <button id="press-btn">按我集氣</button>
-
-    <div class="grass-wrapper">
-      <video id="grass-video" src="grass.mp4" muted loop playsinline></video>
-    </div>
   </div>
 
   <script>
     const button = document.getElementById('press-btn');
     const progressBar = document.getElementById('progress-bar');
-    const video = document.getElementById('grass-video');
-
-    // 手機影片自動播放
-    video.play().catch(() => {
-      // 如果無法自動播放，等使用者點擊
-      console.log("影片需用戶互動才能播放");
-    });
 
     let pressCount = 0;
     const requiredPresses = 10;
@@ -114,22 +86,18 @@
     button.addEventListener('click', () => {
       const now = Date.now();
 
-      // 檢查是否連續
+      // 檢查是否連續按
       if (pressCount > 0 && now - lastPressTime > maxInterval) {
-        pressCount = 0; // 超過間隔重置
+        pressCount = 0;
       }
 
       pressCount++;
       lastPressTime = now;
 
-      // 更新進度條
       progressBar.style.width = (pressCount / requiredPresses * 100) + '%';
 
-      // 嘗試播放影片（保險）
-      video.play().catch(()=>{});
-
       if (pressCount >= requiredPresses) {
-        window.location.href = 'animation.html'; // 連續按十下跳頁
+        window.location.href = 'animation.html'; // 跳到動畫頁
       }
     });
   </script>
