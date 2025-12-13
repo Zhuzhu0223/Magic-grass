@@ -1,75 +1,15 @@
-<!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Magic Grass 集氣頁</title>
-<style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0; padding: 0;
-  font-family: Arial, sans-serif;
-  background: url('bg.png') no-repeat center center / cover;
-  display: flex; justify-content: center; align-items: center;
-  height: 100vh; overflow: hidden;
-  touch-action: manipulation; /* 防手機放大 */
-}
-
-.container {
-  text-align: center;
-  background: rgba(255,255,255,0.6);
-  border-radius: 24px;
-  padding: 2rem;
-  max-width: 400px; width: 90%;
-}
-
-h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-p { font-size: 1rem; margin-bottom: 1rem; }
-
-button {
-  width: 100%;
-  padding: 1rem;
-  font-size: 18px;
-  color: #fff;
-  background: #2e7d32;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  -webkit-text-size-adjust: 100%;
-  -webkit-tap-highlight-color: transparent;
-}
-button:active { transform: none; }
-button:disabled { background: #9e9e9e; cursor: not-allowed; }
-
-.progress {
-  height: 20px;
-  background: #c8e6c9;
-  border-radius: 10px;
-  overflow: hidden;
-  margin: 1rem 0;
-  width: 100%;
-}
-
-.progress-bar {
-  height: 100%;
-  width: 100%;
-  background: #2e7d32;
-  transform-origin: left;
-  transform: scaleX(0);
-  transition: none; /* 保證即時倒退 */
-}
-</style>
-</head>
-<body>
-<div class="container">
-  <h1>一起集氣吧!</h1>
-  <p>快速連續按十下</p>
-  <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
-  <button id="press-btn">按我</button>
-</div>
+<button id="press-btn">按我集氣</button>
+<div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
 
 <script>
+const button = document.getElementById('press-btn');
+const progressBar = document.getElementById('progress-bar');
+
+let pressCount = 0;
+const requiredPresses = 10;
+const maxInterval = 300;
+let lastPressTime = 0;
+
 // 禁止手機雙擊放大
 let lastTouchEnd = 0;
 document.addEventListener('touchend', function(event) {
@@ -78,32 +18,21 @@ document.addEventListener('touchend', function(event) {
   lastTouchEnd = now;
 }, false);
 
-// 集氣判定
-const button = document.getElementById('press-btn');
-const progressBar = document.getElementById('progress-bar');
-
-let pressCount = 0;
-const requiredPresses = 10;
-const maxInterval = 300; // 0.3 秒
-let lastPressTime = 0;
-
-button.addEventListener('click', () => {
+// 使用 touchend 監聽按鍵
+button.addEventListener('touchend', (e) => {
+  e.preventDefault(); // 防止瀏覽器點擊延遲
   const now = Date.now();
 
-  // 超過間隔重置
   if (pressCount > 0 && now - lastPressTime > maxInterval) pressCount = 0;
 
   pressCount++;
   lastPressTime = now;
 
-  // 即時更新進度條
   const progress = Math.min(pressCount / requiredPresses, 1);
   progressBar.style.transform = `scaleX(${progress})`;
 
   if (pressCount >= requiredPresses) {
-    window.location.href = 'animation.html'; // 跳到第二頁
+    window.location.href = 'animation.html';
   }
 });
 </script>
-</body>
-</html>
