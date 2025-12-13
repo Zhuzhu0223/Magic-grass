@@ -13,7 +13,7 @@ body {
   background: url('bg.png') no-repeat center center / cover;
   display: flex; justify-content: center; align-items: center;
   height: 100vh; overflow: hidden;
-  touch-action: manipulation; /* 防止手機放大 */
+  touch-action: manipulation; /* 防手機放大 */
 }
 
 .container {
@@ -36,6 +36,7 @@ button {
   border: none;
   border-radius: 999px;
   cursor: pointer;
+  -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
 button:active { transform: none; }
@@ -56,19 +57,28 @@ button:disabled { background: #9e9e9e; cursor: not-allowed; }
   background: #2e7d32;
   transform-origin: left;
   transform: scaleX(0);
-  transition: none; /* 不用動畫，確保手機即時 */
+  transition: none; /* 保證即時倒退 */
 }
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>集氣小遊戲</h1>
-  <p>連續按十下，每次按鍵間隔不能超過 0.3 秒</p>
+  <h1>一起集氣吧!</h1>
+  <p>快速連續按十下</p>
   <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
-  <button id="press-btn">按我集氣</button>
+  <button id="press-btn">按我</button>
 </div>
 
 <script>
+// 禁止手機雙擊放大
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function(event) {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) event.preventDefault();
+  lastTouchEnd = now;
+}, false);
+
+// 集氣判定
 const button = document.getElementById('press-btn');
 const progressBar = document.getElementById('progress-bar');
 
@@ -81,9 +91,7 @@ button.addEventListener('click', () => {
   const now = Date.now();
 
   // 超過間隔重置
-  if (pressCount > 0 && now - lastPressTime > maxInterval) {
-    pressCount = 0;
-  }
+  if (pressCount > 0 && now - lastPressTime > maxInterval) pressCount = 0;
 
   pressCount++;
   lastPressTime = now;
@@ -93,7 +101,7 @@ button.addEventListener('click', () => {
   progressBar.style.transform = `scaleX(${progress})`;
 
   if (pressCount >= requiredPresses) {
-    window.location.href = 'animation.html';
+    window.location.href = 'animation.html'; // 跳到第二頁
   }
 });
 </script>
