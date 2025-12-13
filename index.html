@@ -13,6 +13,7 @@ body {
   background: url('bg.png') no-repeat center center / cover;
   display: flex; justify-content: center; align-items: center;
   height: 100vh; overflow: hidden;
+  touch-action: manipulation; /* 防止手機放大 */
 }
 
 .container {
@@ -29,23 +30,16 @@ p { font-size: 1rem; margin-bottom: 1rem; }
 button {
   width: 100%;
   padding: 1rem;
-  font-size: 18px; /* 手機不放大 */
+  font-size: 18px;
   color: #fff;
   background: #2e7d32;
   border: none;
   border-radius: 999px;
   cursor: pointer;
-  -webkit-tap-highlight-color: transparent; /* 防手機點擊高亮 */
-  transition: background 0.1s;
+  -webkit-tap-highlight-color: transparent;
 }
-button:active {
-  background: #1b5e20;
-  transform: none; /* 防止點擊放大 */
-}
-button:disabled {
-  background: #9e9e9e;
-  cursor: not-allowed;
-}
+button:active { transform: none; }
+button:disabled { background: #9e9e9e; cursor: not-allowed; }
 
 .progress {
   height: 20px;
@@ -58,9 +52,11 @@ button:disabled {
 
 .progress-bar {
   height: 100%;
-  width: 0%;
+  width: 100%;
   background: #2e7d32;
-  transition: width 0.1s linear;
+  transform-origin: left;
+  transform: scaleX(0);
+  transition: none; /* 不用動畫，確保手機即時 */
 }
 </style>
 </head>
@@ -92,8 +88,9 @@ button.addEventListener('click', () => {
   pressCount++;
   lastPressTime = now;
 
-  // 更新進度條（不會超出框）
-  progressBar.style.width = Math.min((pressCount / requiredPresses) * 100, 100) + '%';
+  // 即時更新進度條
+  const progress = Math.min(pressCount / requiredPresses, 1);
+  progressBar.style.transform = `scaleX(${progress})`;
 
   if (pressCount >= requiredPresses) {
     window.location.href = 'animation.html';
