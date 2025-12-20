@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>手機專用範例</title>
 <style>
   html, body {
@@ -16,7 +16,6 @@
     background-size: 100% 100%;
   }
 
-  /* 透明影片 */
   #grassVideo {
     position: absolute;
     left: 0;
@@ -26,7 +25,6 @@
     z-index: 1;      
   }
 
-  /* 草地覆蓋 */
   .grass-overlay {
     position: absolute;
     bottom: 0;
@@ -38,7 +36,6 @@
     pointer-events: none;
   }
 
-  /* 按鈕置中 */
   #button {
     position: absolute;
     top: 50%;
@@ -48,9 +45,9 @@
     width: 120px;
     height: auto;
     cursor: pointer;
+    touch-action: manipulation; /* 防止瀏覽器手勢 */
   }
 
-  /* 進度條 */
   .progress-container {
     position: absolute;
     top: calc(50% + 70px); 
@@ -73,19 +70,14 @@
 </head>
 <body>
 
-<!-- 透明影片 -->
-<video id="grassVideo" muted>
+<video id="grassVideo" muted playsinline>
   <source src="assets/grass.webm" type="video/webm">
   <source src="assets/grass.mp4" type="video/mp4">
 </video>
 
-<!-- 草地覆蓋 -->
 <img src="assets/grass_overlay.png" class="grass-overlay" alt="草地覆蓋">
-
-<!-- 按鈕圖片 -->
 <img id="button" src="assets/button.png" alt="按鈕">
 
-<!-- 進度條 -->
 <div class="progress-container">
   <div class="progress-bar" id="progress"></div>
 </div>
@@ -100,7 +92,7 @@ let clickCount = 0;
 const requiredClicks = 10; 
 const clickTimeout = 1000; 
 let timer = null;
-let activated = false;      
+let activated = false;
 
 // 將影片底部對齊草地覆蓋一半高度
 function positionVideo() {
@@ -109,10 +101,12 @@ function positionVideo() {
 }
 
 window.addEventListener('load', positionVideo);
-window.addEventListener('resize', positionVideo); 
+window.addEventListener('resize', positionVideo);
 
-btn.addEventListener('click', () => {
-  if(activated) return; 
+// 手機觸控 + 點擊事件
+function handleClick(e){
+  e.preventDefault(); // 避免雙重觸發或放大
+  if(activated) return;
 
   if(timer) clearTimeout(timer);
 
@@ -120,16 +114,16 @@ btn.addEventListener('click', () => {
   const progress = (clickCount / requiredClicks) * 100;
   progressBar.style.width = Math.min(progress, 100) + '%';
 
-  if(clickCount >= requiredClicks) {
+  if(clickCount >= requiredClicks){
     video.style.display = 'block';
-    video.play();
-    activated = true;        
+    video.load(); // 確保影片載入
+    video.play().catch(()=>{}); // 手機瀏覽器需用戶觸發
+    activated = true;
     progressBar.style.width = '100%';
 
-    // 播放完停在最後一格
     video.addEventListener('ended', () => {
-      video.pause();                 
-      video.currentTime = video.duration; 
+      video.pause();
+      video.currentTime = video.duration;
     });
 
     return;
@@ -139,7 +133,10 @@ btn.addEventListener('click', () => {
     clickCount = 0;
     progressBar.style.width = '0%';
   }, clickTimeout);
-});
+}
+
+btn.addEventListener('touchend', handleClick, false);
+btn.addEventListener('click', handleClick, false);
 </script>
 
 </body>
