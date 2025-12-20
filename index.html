@@ -2,110 +2,156 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Magic Grass 集氣頁</title>
+
+<meta name="viewport"
+  content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+<title>集氣小遊戲</title>
+
 <style>
-* { box-sizing: border-box; }
-
-body {
-  margin: 0; padding: 0;
-  font-family: Arial, sans-serif;
-  background: url('bg.png') no-repeat center center / cover;
-  display: flex; justify-content: center; align-items: center;
-  height: 100vh; overflow: hidden;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
   touch-action: manipulation;
-}
-
-.container {
-  text-align: center;
-  background: rgba(255,255,255,0.6);
-  border-radius: 24px;
-  padding: 2rem;
-  max-width: 400px; width: 90%;
-}
-
-h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
-p { font-size: 1rem; margin-bottom: 1rem; }
-
-button {
-  width: 100%;
-  padding: 1rem;
-  font-size: 18px;
-  color: #fff;
-  background: #2e7d32;
-  border: none;
-  border-radius: 999px;
-  cursor: pointer;
-  -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
 }
-button:active { transform: none; }
-button:disabled { background: #9e9e9e; cursor: not-allowed; }
 
-.progress {
-  height: 20px;
-  background: #c8e6c9;
-  border-radius: 10px;
+html, body {
+  width: 100%;
+  height: 100%;
   overflow: hidden;
-  margin: 1rem 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+}
+
+body {
+  background: url("bg.png") no-repeat center center / cover;
+}
+
+/* ===== 標題 ===== */
+.title {
+  position: absolute;
+  top: 12%;
+  width: 100%;
+  text-align: center;
+  color: #4f7f3b;
+  font-size: 1.6rem;
+  font-weight: bold;
+}
+
+/* ===== 按鈕 ===== */
+.button-wrap {
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70%;
+  max-width: 320px;
+}
+
+.button-wrap img {
+  width: 100%;
+  display: block;
+}
+
+/* ===== 進度條 ===== */
+.progress-wrap {
+  position: absolute;
+  top: 42%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 65%;
+  max-width: 300px;
+}
+
+.progress-bg {
   width: 100%;
 }
 
-.progress-bar {
-  height: 100%;
+.progress-mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0%;
+  overflow: hidden;
+}
+
+.progress-fill {
   width: 100%;
-  background: #2e7d32;
-  transform-origin: left;
-  transform: scaleX(0);
-  transition: none;
+}
+
+/* ===== 草影片 ===== */
+.grass-video {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  pointer-events: none;
+  display: none;
+}
+
+/* ===== 草前景 ===== */
+.grass-cover {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  pointer-events: none;
 }
 </style>
 </head>
+
 <body>
-<div class="container">
-  <h1>一起集氣吧!</h1>
-  <p>快速連續按十下</p>
-  <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
-  <button id="press-btn">按我</button>
+
+<div class="title">
+  一起集氣吧！<br>
+  快速連續按十下
 </div>
 
+<div class="button-wrap" id="btn">
+  <img src="button.png" alt="集氣">
+</div>
+
+<div class="progress-wrap">
+  <img src="progress_bg.png" class="progress-bg">
+  <div class="progress-mask" id="bar">
+    <img src="progress_fill.png" class="progress-fill">
+  </div>
+</div>
+
+<video class="grass-video" id="grassVideo" muted playsinline>
+  <source src="grass.webm" type="video/webm">
+</video>
+
+<img src="grass_cover.png" class="grass-cover">
+
 <script>
-const button = document.getElementById('press-btn');
-const progressBar = document.getElementById('progress-bar');
+let count = 0;
+const need = 10;
+const limit = 300;
+let lastTime = 0;
 
-let pressCount = 0;
-const requiredPresses = 10;
-const maxInterval = 300;
-let lastPressTime = 0;
+const btn = document.getElementById("btn");
+const bar = document.getElementById("bar");
+const video = document.getElementById("grassVideo");
 
-// 防止 body 雙擊放大，但不阻止按鈕
-let lastTouchEnd = 0;
-document.body.addEventListener('touchend', function(event) {
-  if (event.target !== button) { // 按鈕除外
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) event.preventDefault();
-    lastTouchEnd = now;
-  }
-}, false);
-
-// 按鈕使用 touchend
-button.addEventListener('touchend', (e) => {
-  e.preventDefault(); // 防 300ms 延遲
+btn.addEventListener("click", () => {
   const now = Date.now();
 
-  if (pressCount > 0 && now - lastPressTime > maxInterval) pressCount = 0;
+  if (now - lastTime > limit) {
+    count = 0;
+  }
 
-  pressCount++;
-  lastPressTime = now;
+  count++;
+  lastTime = now;
 
-  const progress = Math.min(pressCount / requiredPresses, 1);
-  progressBar.style.transform = `scaleX(${progress})`;
+  bar.style.width = (count / need * 100) + "%";
 
-  if (pressCount >= requiredPresses) {
-    window.location.href = 'animation.html';
+  if (count >= need) {
+    video.style.display = "block";
+    video.play();
+    btn.style.pointerEvents = "none";
   }
 });
 </script>
+
 </body>
 </html>
-
