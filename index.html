@@ -2,154 +2,143 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
-
-<meta name="viewport"
-  content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-
-<title>集氣小遊戲</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手機專用範例</title>
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-}
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 375px;   
+    height: 667px;  
+    overflow: hidden;
+    position: relative;
+    background: url('bg.png') no-repeat top left;
+    background-size: 100% 100%;
+  }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
-}
+  /* 透明影片 */
+  #grassVideo {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: auto;
+    display: none;   
+    z-index: 1;      
+  }
 
-body {
-  background: url("bg.png") no-repeat center center / cover;
-}
+  /* 草地覆蓋 */
+  .grass-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: auto;
+    z-index: 2; 
+    pointer-events: none;
+  }
 
-/* ===== 標題 ===== */
-.title {
-  position: absolute;
-  top: 12%;
-  width: 100%;
-  text-align: center;
-  color: #4f7f3b;
-  font-size: 1.6rem;
-  font-weight: bold;
-}
+  /* 按鈕置中 */
+  #button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3; 
+    width: 120px;
+    height: auto;
+    cursor: pointer;
+  }
 
-/* ===== 按鈕 ===== */
-.button-wrap {
-  position: absolute;
-  top: 28%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 70%;
-  max-width: 320px;
-}
+  /* 進度條 */
+  .progress-container {
+    position: absolute;
+    top: calc(50% + 70px); 
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 12px;
+    background: #ccc;
+    border-radius: 6px;
+    overflow: hidden;
+    z-index: 3;
+  }
 
-.button-wrap img {
-  width: 100%;
-  display: block;
-}
-
-/* ===== 進度條 ===== */
-.progress-wrap {
-  position: absolute;
-  top: 42%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 65%;
-  max-width: 300px;
-}
-
-.progress-bg {
-  width: 100%;
-}
-
-.progress-mask {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 0%;
-  overflow: hidden;
-}
-
-.progress-fill {
-  width: 100%;
-}
-
-/* ===== 草影片 ===== */
-.grass-video {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  pointer-events: none;
-  display: none;
-}
-
-/* ===== 草前景 ===== */
-.grass-cover {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  pointer-events: none;
-}
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #4caf50;
+  }
 </style>
 </head>
-
 <body>
 
-<div class="title">
-  一起集氣吧！<br>
-  快速連續按十下
-</div>
-
-<div class="button-wrap" id="btn">
-  <img src="button.png" alt="集氣">
-</div>
-
-<div class="progress-wrap">
-  <img src="progress_bg.png" class="progress-bg">
-  <div class="progress-mask" id="bar">
-    <img src="progress_fill.png" class="progress-fill">
-  </div>
-</div>
-
-<video class="grass-video" id="grassVideo" muted playsinline>
+<!-- 透明影片 -->
+<video id="grassVideo" muted>
   <source src="grass.webm" type="video/webm">
+  <source src="grass.mp4" type="video/mp4">
 </video>
 
-<img src="grass_cover.png" class="grass-cover">
+<!-- 草地覆蓋 -->
+<img src="grass_overlay.png" class="grass-overlay" alt="草地覆蓋">
+
+<!-- 按鈕圖片 -->
+<img id="button" src="button.png" alt="按鈕">
+
+<!-- 進度條 -->
+<div class="progress-container">
+  <div class="progress-bar" id="progress"></div>
+</div>
 
 <script>
-let count = 0;
-const need = 10;
-const limit = 300;
-let lastTime = 0;
+const btn = document.getElementById('button');
+const video = document.getElementById('grassVideo');
+const overlay = document.querySelector('.grass-overlay');
+const progressBar = document.getElementById('progress');
 
-const btn = document.getElementById("btn");
-const bar = document.getElementById("bar");
-const video = document.getElementById("grassVideo");
+let clickCount = 0;
+const requiredClicks = 10; 
+const clickTimeout = 1000; 
+let timer = null;
+let activated = false;      
 
-btn.addEventListener("click", () => {
-  const now = Date.now();
+// 將影片底部對齊草地覆蓋一半高度
+function positionVideo() {
+  const overlayHeight = overlay.offsetHeight;
+  video.style.bottom = (overlayHeight / 2) + 'px';
+}
 
-  if (now - lastTime > limit) {
-    count = 0;
-  }
+window.addEventListener('load', positionVideo);
+window.addEventListener('resize', positionVideo); 
 
-  count++;
-  lastTime = now;
+btn.addEventListener('click', () => {
+  if(activated) return; 
 
-  bar.style.width = (count / need * 100) + "%";
+  if(timer) clearTimeout(timer);
 
-  if (count >= need) {
-    video.style.display = "block";
+  clickCount++;
+  const progress = (clickCount / requiredClicks) * 100;
+  progressBar.style.width = Math.min(progress, 100) + '%';
+
+  if(clickCount >= requiredClicks) {
+    video.style.display = 'block';
     video.play();
-    btn.style.pointerEvents = "none";
+    activated = true;        
+    progressBar.style.width = '100%';
+
+    // 播放完停在最後一格
+    video.addEventListener('ended', () => {
+      video.pause();                 
+      video.currentTime = video.duration; 
+    });
+
+    return;
   }
+
+  timer = setTimeout(() => {
+    clickCount = 0;
+    progressBar.style.width = '0%';
+  }, clickTimeout);
 });
 </script>
 
