@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>手機專用範例</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 375px;   
+    height: 667px;  
+    overflow: hidden;
+    position: relative;
+    background: url('bg.png') no-repeat top left;
+    background-size: 100% 100%;
+  }
+
+  /* 透明影片 */
+  #grassVideo {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: auto;
+    display: none;   
+    z-index: 1;      
+  }
+
+  /* 草地覆蓋 */
+  .grass-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    height: auto;
+    z-index: 2; 
+    pointer-events: none;
+  }
+
+  /* 按鈕置中 */
+  #button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3; 
+    width: 120px;
+    height: auto;
+    cursor: pointer;
+  }
+
+  /* 進度條 */
+  .progress-container {
+    position: absolute;
+    top: calc(50% + 70px); 
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 12px;
+    background: #ccc;
+    border-radius: 6px;
+    overflow: hidden;
+    z-index: 3;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: #4caf50;
+  }
+</style>
+</head>
+<body>
+
+<!-- 透明影片 -->
+<video id="grassVideo" muted>
+  <source src="grass.webm" type="video/webm">
+  <source src="grass.mp4" type="video/mp4">
+</video>
+
+<!-- 草地覆蓋 -->
+<img src="grass_overlay.png" class="grass-overlay" alt="草地覆蓋">
+
+<!-- 按鈕圖片 -->
+<img id="button" src="button.png" alt="按鈕">
+
+<!-- 進度條 -->
+<div class="progress-container">
+  <div class="progress-bar" id="progress"></div>
+</div>
+
+<script>
+const btn = document.getElementById('button');
+const video = document.getElementById('grassVideo');
+const overlay = document.querySelector('.grass-overlay');
+const progressBar = document.getElementById('progress');
+
+let clickCount = 0;
+const requiredClicks = 10; 
+const clickTimeout = 1000; 
+let timer = null;
+let activated = false;      
+
+// 將影片底部對齊草地覆蓋一半高度
+function positionVideo() {
+  const overlayHeight = overlay.offsetHeight;
+  video.style.bottom = (overlayHeight / 2) + 'px';
+}
+
+window.addEventListener('load', positionVideo);
+window.addEventListener('resize', positionVideo); 
+
+btn.addEventListener('click', () => {
+  if(activated) return; 
+
+  if(timer) clearTimeout(timer);
+
+  clickCount++;
+  const progress = (clickCount / requiredClicks) * 100;
+  progressBar.style.width = Math.min(progress, 100) + '%';
+
+  if(clickCount >= requiredClicks) {
+    video.style.display = 'block';
+    video.play();
+    activated = true;        
+    progressBar.style.width = '100%';
+
+    // 播放完停在最後一格
+    video.addEventListener('ended', () => {
+      video.pause();                 
+      video.currentTime = video.duration; 
+    });
+
+    return;
+  }
+
+  timer = setTimeout(() => {
+    clickCount = 0;
+    progressBar.style.width = '0%';
+  }, clickTimeout);
+});
+</script>
+
+</body>
+</html>
