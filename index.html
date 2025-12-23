@@ -1,83 +1,94 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>手機專用範例</title>
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>控制 Unity</title>
+
 <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 375px;   
-    height: 667px;  
-    overflow: hidden;
-    position: relative;
-    background: url('assets/bg.png') no-repeat top left;
-    background-size: 100% 100%;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 375px;
+  height: 667px;
+  overflow: hidden;
+  position: relative;
+  background: url('assets/bg.png') no-repeat top left;
+  background-size: 100% 100%;
+}
 
-  #grassVideo {
-    position: absolute;
-    left: 0;
-    width: 100%;
-    height: auto;
-    display: none;   
-    z-index: 1;      
-  }
+/* 影片 */
+#grassVideo {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: auto;
+  display: none;
+  z-index: 1;
+}
 
-  .grass-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    height: auto;
-    z-index: 2; 
-    pointer-events: none;
-  }
+/* 草地覆蓋 */
+.grass-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  z-index: 2;
+  pointer-events: none;
+}
 
-  #button {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 3; 
-    width: 120px;
-    height: auto;
-    cursor: pointer;
-    touch-action: manipulation; /* 防止瀏覽器手勢 */
-  }
+/* 按鈕 */
+#button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  z-index: 3;
+  cursor: pointer;
+  touch-action: manipulation;
+}
 
-  .progress-container {
-    position: absolute;
-    top: calc(50% + 70px); 
-    left: 50%;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 12px;
-    background: #ccc;
-    border-radius: 6px;
-    overflow: hidden;
-    z-index: 3;
-  }
+/* 進度條 */
+.progress-container {
+  position: absolute;
+  top: calc(50% + 70px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 12px;
+  background: #ccc;
+  border-radius: 6px;
+  overflow: hidden;
+  z-index: 3;
+}
 
-  .progress-bar {
-    height: 100%;
-    width: 0%;
-    background: #4caf50;
-  }
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #4caf50;
+}
 </style>
 </head>
+
 <body>
 
+<!-- 影片 -->
 <video id="grassVideo" muted playsinline>
   <source src="assets/grass.webm" type="video/webm">
   <source src="assets/grass.mp4" type="video/mp4">
 </video>
 
-<img src="assets/grass_overlay.png" class="grass-overlay" alt="草地覆蓋">
-<img id="button" src="assets/button.png" alt="按鈕">
+<!-- 草地 -->
+<img src="assets/grass_overlay.png" class="grass-overlay">
 
+<!-- 按鈕 -->
+<img id="button" src="assets/button.png">
+
+<!-- 進度條 -->
 <div class="progress-container">
   <div class="progress-bar" id="progress"></div>
 </div>
@@ -89,12 +100,19 @@ const overlay = document.querySelector('.grass-overlay');
 const progressBar = document.getElementById('progress');
 
 let clickCount = 0;
-const requiredClicks = 10; 
-const clickTimeout = 1000; 
+const requiredClicks = 10;
+const clickTimeout = 1000;
 let timer = null;
 let activated = false;
 
-// 將影片底部對齊草地覆蓋一半高度
+/* Unity 通知 */
+function sendToUnity() {
+  fetch("http://192.168.50.128:8080/")
+    .then(() => console.log("已送出給 Unity"))
+    .catch(err => console.log(err));
+}
+
+/* 影片位置：草地一半 */
 function positionVideo() {
   const overlayHeight = overlay.offsetHeight;
   video.style.bottom = (overlayHeight / 2) + 'px';
@@ -103,24 +121,29 @@ function positionVideo() {
 window.addEventListener('load', positionVideo);
 window.addEventListener('resize', positionVideo);
 
-// 手機觸控 + 點擊事件
-function handleClick(e){
-  e.preventDefault(); // 避免雙重觸發或放大
-  if(activated) return;
+function handleClick(e) {
+  e.preventDefault();
+  if (activated) return;
 
-  if(timer) clearTimeout(timer);
+  if (timer) clearTimeout(timer);
 
   clickCount++;
-  const progress = (clickCount / requiredClicks) * 100;
-  progressBar.style.width = Math.min(progress, 100) + '%';
+  progressBar.style.width =
+    Math.min((clickCount / requiredClicks) * 100, 100) + '%';
 
-  if(clickCount >= requiredClicks){
-    video.style.display = 'block';
-    video.load(); // 確保影片載入
-    video.play().catch(()=>{}); // 手機瀏覽器需用戶觸發
+  if (clickCount >= requiredClicks) {
     activated = true;
+
+    video.style.display = 'block';
+    video.load();
+    video.play().catch(()=>{});
+
     progressBar.style.width = '100%';
 
+    // 👉 通知 Unity（只送一次）
+    sendToUnity();
+
+    // 停在最後一格
     video.addEventListener('ended', () => {
       video.pause();
       video.currentTime = video.duration;
